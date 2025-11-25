@@ -1,0 +1,103 @@
+import numpy as np
+import pandas as pd
+
+"""
+dataframeData = [
+    {"ID": "A001", "Project": "Project 1", "Cost": 1002000, "Status": "Finished"},
+    {"ID": "A002", "Project": "Project 2", "Cost": 2000000, "Status": "Ongoing"},
+    {"ID": "A003", "Project": "Project 3", "Cost": 4500000, "Status": "Finished"},
+    {"ID": "A004", "Project": "Project 4", "Cost": 5500000, "Status": "Ongoing"},
+    {"ID": "A005", "Project": "Project 5", "Status": "Finished"},
+    {"ID": "A002", "Project": "Project 6", "Cost": 680000, "Status": "Failed"},
+    {"ID": "A005", "Project": "Project 7", "Cost": 400000, "Status": "Finished"},
+    {"ID": "A003", "Project": "Project 8", "Cost": 350000, "Status": "Failed"},
+    {"ID": "A001", "Project": "Project 9", "Status": "Ongoing"},
+    {"ID": "A003", "Project": "Project 10", "Cost": 300000, "Status": "Finished"},
+    {"ID": "A001", "Project": "Project 11", "Cost": 2000000, "Status": "Failed"},
+    {"ID": "A004", "Project": "Project 12", "Cost": 1000000, "Status": "Ongoing"},
+    {"ID": "A004", "Project": "Project 13", "Cost": 300000, "Status": "Finished"},
+    {"ID": "A005", "Project": "Project 14", "Cost": 200000, "Status": "Finished"},
+]
+
+EmployeeData = [
+    {"ID": "A001", "Name": "John Alter","Gender" : "M", "City": "Paris" , "Age": 25},
+    {"ID": "A002", "Name": "Alice Luxumberg","Gender" : "F", "City": "London" , "Age": 27},
+    {"ID": "A003", "Name": "Tom Sabestine","Gender" : "M", "City": "Berlin" , "Age": 29},
+    {"ID": "A004", "Name": "Nina Adgra","Gender" : "F", "City": "Newyork" , "Age": 31},
+    {"ID": "A005", "Name": "Amy Johny","Gender" : "F", "City": "Madrid" , "Age": 30},
+]
+
+levelData = [
+    {"ID" : "A001","Designation Level" : 2},
+    {"ID" : "A002","Designation Level" : 2},
+    {"ID" : "A003","Designation Level" : 3},
+    {"ID" : "A004","Designation Level" : 2},
+    {"ID" : "A005","Designation Level" : 3},
+]
+# task1
+projectDataframe = pd.DataFrame(dataframeData)
+projectDataframe.to_csv("/Users/rahul_raj30@optum.com/Desktop/projectDataframe.csv", index=False)
+EmployeeDataframe = pd.DataFrame(EmployeeData)
+EmployeeDataframe.to_csv("/Users/rahul_raj30@optum.com/Desktop/EmployeeDataframe.csv", index=False)
+SenioritylevelDataframe = pd.DataFrame(levelData)
+SenioritylevelDataframe.to_csv("/Users/rahul_raj30@optum.com/Desktop/Senioritylevel.csv", index=False)"""
+
+# task2
+projectDataframe = pd.read_csv(
+    "/Users/rahul_raj30@optum.com/Desktop/projectDataframe.csv"
+)
+EmployeeDataframe = pd.read_csv(
+    "/Users/rahul_raj30@optum.com/Desktop/EmployeeDataframe.csv"
+)
+SenioritylevelDataframe = pd.read_csv(
+    "/Users/rahul_raj30@optum.com/Desktop/Senioritylevel.csv"
+)
+
+sum = 0
+for i in range(len(projectDataframe)):
+    if pd.isna(projectDataframe.loc[i, "Cost"]):
+        projectDataframe.loc[i, "Cost"] = sum / i
+    else:
+        sum += projectDataframe.loc[i, "Cost"]
+
+
+# task3
+EmployeeDataframe["First Name"] = EmployeeDataframe["Name"].apply(
+    lambda x: x.split(" ")[0]
+)
+EmployeeDataframe["Last Name"] = EmployeeDataframe["Name"].apply(
+    lambda x: x.split(" ")[1]
+)
+EmployeeDataframe.drop(columns=["Name"], inplace=True)
+
+# task4
+final = pd.merge(projectDataframe, EmployeeDataframe, on="ID", how="inner")
+final = pd.merge(final, SenioritylevelDataframe, on="ID", how="inner")
+
+# task5
+final["Bonus"] = np.where(final["Status"] == "Finished", final["Cost"] * 0.05, 0)
+
+# task6
+final["Designation Level"] = np.where(
+    final["Status"] == "Failed",
+    final["Designation Level"] + 1,
+    final["Designation Level"],
+)
+final = final[final["Designation Level"] <= 4]
+
+# task7
+final["First Name"] = np.where(
+    final["Gender"] == "M", "Mr. " + final["First Name"], "Ms. " + final["First Name"]
+)
+final.drop(columns=["Gender"], inplace=True)
+
+# task8
+final["Designation Level"] = np.where(
+    final["Age"] > 29, final["Designation Level"] - 1, final["Designation Level"]
+)
+
+# task9
+TotalProjCost = final.groupby(["ID", "First Name"])["Cost"].sum().reset_index()
+TotalProjCost = TotalProjCost.rename(columns={"Cost": "Total Cost"})
+# task10
+print(final[final["City"].str.contains("o")])
